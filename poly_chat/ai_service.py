@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 model = None
 tokenizer = None
 
-def load_model():
+def load_model(model_path=None):
     """Load the fine-tuned Mixtral model"""
     global model, tokenizer
     
@@ -23,8 +23,11 @@ def load_model():
         # Import here to avoid loading on startup
         from transformers import AutoTokenizer, AutoModelForCausalLM
         
-        # Load your fine-tuned model
-        model_path = "checkpoint-2200"  # Path to your fine-tuned model
+        # Use provided model path or default
+        if model_path is None:
+            model_path = "checkpoint-2200"  # Default path
+        
+        logger.info(f"Loading model from: {model_path}")
         
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         tokenizer.pad_token = tokenizer.eos_token
@@ -42,6 +45,17 @@ def load_model():
     except Exception as e:
         logger.error(f"Error loading model: {e}")
         raise
+
+def reload_model(model_path=None):
+    """Reload the model with a new path"""
+    global model, tokenizer
+    
+    # Clear existing model and tokenizer
+    model = None
+    tokenizer = None
+    
+    # Load new model
+    load_model(model_path)
 
 def format_chat_history(messages):
     """Format messages for multi-turn chat using the proven chat_cli.py approach"""
@@ -64,6 +78,7 @@ class AIService:
         self.model_name = config.model_name
         self.max_tokens = config.max_tokens
         self.temperature = config.temperature
+        self._current_model_path = None  # Track current model path
     
     def generate_response(self, conversation: Conversation, user_message: str) -> str:
         """
@@ -95,8 +110,18 @@ class AIService:
             "content": user_message
         })
         
-        # Call local model
-        return self._call_local_model(conversation_history)
+        # Call appropriate model based on configuration
+        if self.config.model_type == 'local':
+            return self._call_local_model(conversation_history)
+        elif self.config.model_type == 'deepseek':
+            return self._call_deepseek_api(conversation_history)
+        elif self.config.model_type == 'openai':
+            return self._call_openai_api(conversation_history)
+        elif self.config.model_type == 'anthropic':
+            return self._call_anthropic_api(conversation_history)
+        else:
+            # Default to local model
+            return self._call_local_model(conversation_history)
     
     def _call_local_model(self, messages: List[Dict]) -> str:
         """
@@ -105,9 +130,16 @@ class AIService:
         global model, tokenizer
         
         try:
-            # Load model if not already loaded
-            if model is None or tokenizer is None:
-                load_model()
+            # Check if we need to load or reload the model
+            model_path = self.model_name
+            
+            # Load model if not already loaded or if model path has changed
+            if (model is None or tokenizer is None or 
+                self._current_model_path != model_path):
+                
+                logger.info(f"Loading model from: {model_path}")
+                load_model(model_path)
+                self._current_model_path = model_path
             
             # Format messages for the model using proven approach
             prompt = format_chat_history(messages)

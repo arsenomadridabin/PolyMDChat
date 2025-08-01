@@ -35,8 +35,9 @@ def ai_settings(request):
             config, created = AIModelConfig.objects.get_or_create(
                 is_active=True,
                 defaults={
-                    'name': 'DeepSeek Configuration',
-                    'model_name': 'deepseek-chat',
+                    'name': 'Local Mixtral Model',
+                    'model_type': 'local',
+                    'model_name': 'checkpoint-2200',
                     'max_tokens': 1000,
                     'temperature': 0.7,
                     'is_active': True
@@ -44,7 +45,9 @@ def ai_settings(request):
             )
             
             # Update configuration
+            config.model_type = request.POST.get('model_type', 'local')
             config.model_name = request.POST.get('model_name', 'checkpoint-2200')
+            config.api_key = request.POST.get('api_key', '')
             config.max_tokens = int(request.POST.get('max_tokens', 1000))
             config.temperature = float(request.POST.get('temperature', 0.7))
             config.save()
@@ -59,8 +62,9 @@ def ai_settings(request):
     config = AIModelConfig.objects.filter(is_active=True).first()
     if not config:
         config = AIModelConfig.objects.create(
-            name='DeepSeek Configuration',
-            model_name='deepseek-chat',
+            name='Local Mixtral Model',
+            model_type='local',
+            model_name='checkpoint-2200',
             max_tokens=1000,
             temperature=0.7,
             is_active=True

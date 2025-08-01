@@ -35,12 +35,20 @@ class Message(models.Model):
 
 class AIModelConfig(models.Model):
     """Configuration for AI model settings"""
+    MODEL_TYPES = [
+        ('local', 'Local Model'),
+        ('deepseek', 'DeepSeek API'),
+        ('openai', 'OpenAI API'),
+        ('anthropic', 'Anthropic Claude'),
+    ]
+    
     name = models.CharField(max_length=100, unique=True)
+    model_type = models.CharField(max_length=20, choices=MODEL_TYPES, default='local')
     api_key = models.CharField(max_length=255, blank=True)  # Store securely in production
-    model_name = models.CharField(max_length=100, default='gpt-3.5-turbo')
+    model_name = models.CharField(max_length=100, default='checkpoint-2200')
     max_tokens = models.IntegerField(default=1000)
     temperature = models.FloatField(default=0.7)
     is_active = models.BooleanField(default=True)
     
     def __str__(self):
-        return f"{self.name} ({self.model_name})"
+        return f"{self.name} ({self.model_type}: {self.model_name})"

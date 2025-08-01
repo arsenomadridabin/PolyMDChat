@@ -27,17 +27,36 @@
             <form method="post">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label for="model_name" class="form-label">Model Name</label>
-                    <select class="form-control" id="model_name" name="model_name">
-                        <option value="checkpoint-2200" {% if config.model_name == 'checkpoint-2200' %}selected{% endif %}>
-                            Checkpoint-2200 (Fine-tuned Mixtral)
+                    <label for="model_type" class="form-label">Model Type</label>
+                    <select class="form-control" id="model_type" name="model_type" onchange="updateModelOptions()">
+                        <option value="local" {% if config.model_type == 'local' %}selected{% endif %}>
+                            Local Model
                         </option>
-                        <option value="mixtral-8x7b" {% if config.model_name == 'mixtral-8x7b' %}selected{% endif %}>
-                            Mixtral-8x7B (Base Model)
+                        <option value="deepseek" {% if config.model_type == 'deepseek' %}selected{% endif %}>
+                            DeepSeek API
+                        </option>
+                        <option value="openai" {% if config.model_type == 'openai' %}selected{% endif %}>
+                            OpenAI API
+                        </option>
+                        <option value="anthropic" {% if config.model_type == 'anthropic' %}selected{% endif %}>
+                            Anthropic Claude
                         </option>
                     </select>
                     <div class="form-text">
-                        Select your fine-tuned model for chat conversations
+                        Choose between local models or external APIs
+                    </div>
+                </div>
+                
+                <div class="form-group" id="api_key_group" style="display: none;">
+                    <label for="api_key" class="form-label">API Key</label>
+                    <input type="password" 
+                           class="form-control" 
+                           id="api_key" 
+                           name="api_key" 
+                           value="{{ config.api_key }}"
+                           placeholder="Enter your API key">
+                    <div class="form-text">
+                        Your API key for external services (stored securely)
                     </div>
                 </div>
                 
@@ -47,10 +66,16 @@
                         <option value="checkpoint-2200" {% if config.model_name == 'checkpoint-2200' %}selected{% endif %}>
                             Checkpoint-2200 (Fine-tuned Mixtral)
                         </option>
+                        <option value="checkpoint-3000" {% if config.model_name == 'checkpoint-3000' %}selected{% endif %}>
+                            Checkpoint-3000 (Fine-tuned Mixtral)
+                        </option>
                         <option value="mixtral-8x7b" {% if config.model_name == 'mixtral-8x7b' %}selected{% endif %}>
                             Mixtral-8x7B (Base Model)
                         </option>
                     </select>
+                    <div class="form-text" id="model_help">
+                        Select your local model for chat conversations
+                    </div>
                 </div>
                 
                 <div class="form-row">
@@ -115,8 +140,10 @@
             <div class="help-section">
                 <h4>Model Options:</h4>
                 <ul>
-                    <li><strong>Checkpoint-2200:</strong> Your fine-tuned Mixtral model for multi-turn chat</li>
-                    <li><strong>Mixtral-8x7B:</strong> Base Mixtral model (if available)</li>
+                    <li><strong>Local Models:</strong> Your fine-tuned Mixtral models (checkpoint-2200, checkpoint-3000)</li>
+                    <li><strong>DeepSeek API:</strong> External DeepSeek models for chat and coding</li>
+                    <li><strong>OpenAI API:</strong> GPT models for general conversation</li>
+                    <li><strong>Anthropic Claude:</strong> Claude models for advanced reasoning</li>
                 </ul>
             </div>
             
@@ -423,6 +450,91 @@
 document.addEventListener('DOMContentLoaded', function() {
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Initialize model options
+    updateModelOptions();
 });
+
+function updateModelOptions() {
+    const modelType = document.getElementById('model_type').value;
+    const modelNameSelect = document.getElementById('model_name');
+    const apiKeyGroup = document.getElementById('api_key_group');
+    const modelHelp = document.getElementById('model_help');
+    
+    // Clear existing options
+    modelNameSelect.innerHTML = '';
+    
+    if (modelType === 'local') {
+        // Local model options
+        const localOptions = [
+            { value: 'checkpoint-2200', text: 'Checkpoint-2200 (Fine-tuned Mixtral)' },
+            { value: 'checkpoint-3000', text: 'Checkpoint-3000 (Fine-tuned Mixtral)' },
+            { value: 'mixtral-8x7b', text: 'Mixtral-8x7B (Base Model)' }
+        ];
+        
+        localOptions.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.textContent = option.text;
+            modelNameSelect.appendChild(optionElement);
+        });
+        
+        modelHelp.textContent = 'Select your local model for chat conversations';
+        apiKeyGroup.style.display = 'none';
+        
+    } else if (modelType === 'deepseek') {
+        // DeepSeek API options
+        const deepseekOptions = [
+            { value: 'deepseek-chat', text: 'DeepSeek Chat' },
+            { value: 'deepseek-coder', text: 'DeepSeek Coder' }
+        ];
+        
+        deepseekOptions.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.textContent = option.text;
+            modelNameSelect.appendChild(optionElement);
+        });
+        
+        modelHelp.textContent = 'Select DeepSeek model for API calls';
+        apiKeyGroup.style.display = 'block';
+        
+    } else if (modelType === 'openai') {
+        // OpenAI API options
+        const openaiOptions = [
+            { value: 'gpt-4', text: 'GPT-4' },
+            { value: 'gpt-3.5-turbo', text: 'GPT-3.5 Turbo' },
+            { value: 'gpt-4-turbo', text: 'GPT-4 Turbo' }
+        ];
+        
+        openaiOptions.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.textContent = option.text;
+            modelNameSelect.appendChild(optionElement);
+        });
+        
+        modelHelp.textContent = 'Select OpenAI model for API calls';
+        apiKeyGroup.style.display = 'block';
+        
+    } else if (modelType === 'anthropic') {
+        // Anthropic API options
+        const anthropicOptions = [
+            { value: 'claude-3-opus', text: 'Claude 3 Opus' },
+            { value: 'claude-3-sonnet', text: 'Claude 3 Sonnet' },
+            { value: 'claude-3-haiku', text: 'Claude 3 Haiku' }
+        ];
+        
+        anthropicOptions.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.textContent = option.text;
+            modelNameSelect.appendChild(optionElement);
+        });
+        
+        modelHelp.textContent = 'Select Anthropic model for API calls';
+        apiKeyGroup.style.display = 'block';
+    }
+}
 </script>
 {% endblock %} 
