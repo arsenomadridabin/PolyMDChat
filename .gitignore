@@ -1,5 +1,12 @@
 db.sqlite3
 checkpoint-2200/
-PolyChat/__pycache__/
-poly_chat/__pycache__/
 poly_chat/migrations/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore Django migration cache
+*/migrations/__pycache__/
