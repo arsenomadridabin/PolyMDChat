@@ -1,0 +1,428 @@
+{% extends 'poly_chat/base.html' %}
+
+{% block title %}AI Settings - PolyChat{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="settings-card">
+        <div class="card-header">
+            <div class="header-content">
+                <div class="title-section">
+                    <i class="fas fa-cog"></i>
+                    <h2>AI Configuration</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="model_name" class="form-label">Model Name</label>
+                    <select class="form-control" id="model_name" name="model_name">
+                        <option value="checkpoint-2200" {% if config.model_name == 'checkpoint-2200' %}selected{% endif %}>
+                            Checkpoint-2200 (Fine-tuned Mixtral)
+                        </option>
+                        <option value="mixtral-8x7b" {% if config.model_name == 'mixtral-8x7b' %}selected{% endif %}>
+                            Mixtral-8x7B (Base Model)
+                        </option>
+                    </select>
+                    <div class="form-text">
+                        Select your fine-tuned model for chat conversations
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="model_name" class="form-label">Model Name</label>
+                    <select class="form-control" id="model_name" name="model_name">
+                        <option value="checkpoint-2200" {% if config.model_name == 'checkpoint-2200' %}selected{% endif %}>
+                            Checkpoint-2200 (Fine-tuned Mixtral)
+                        </option>
+                        <option value="mixtral-8x7b" {% if config.model_name == 'mixtral-8x7b' %}selected{% endif %}>
+                            Mixtral-8x7B (Base Model)
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="max_tokens" class="form-label">Max Tokens</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="max_tokens" 
+                               name="max_tokens" 
+                               value="{{ config.max_tokens|default:1000 }}"
+                               min="1" 
+                               max="4000">
+                        <div class="form-text">Maximum response length (1-4000)</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="temperature" class="form-label">Temperature</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="temperature" 
+                               name="temperature" 
+                               value="{{ config.temperature|default:0.7 }}"
+                               min="0" 
+                               max="2" 
+                               step="0.1">
+                        <div class="form-text">Creativity level (0.0-2.0)</div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="{% url 'poly_chat:conversation_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Conversations
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="help-card">
+        <div class="card-header">
+            <div class="header-content">
+                <div class="title-section">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>Configuration Help</h3>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="help-section">
+                <h4>Getting Started:</h4>
+                <ol>
+                    <li>Ensure your fine-tuned model is in the "checkpoint-2200" directory</li>
+                    <li>Install required dependencies: <code>pip install torch transformers accelerate</code></li>
+                    <li>Select your model above and save the configuration</li>
+                    <li>Start chatting with your fine-tuned Mixtral model!</li>
+                </ol>
+            </div>
+            
+            <div class="help-section">
+                <h4>Model Options:</h4>
+                <ul>
+                    <li><strong>Checkpoint-2200:</strong> Your fine-tuned Mixtral model for multi-turn chat</li>
+                    <li><strong>Mixtral-8x7B:</strong> Base Mixtral model (if available)</li>
+                </ul>
+            </div>
+            
+            <div class="help-section">
+                <h4>Parameters:</h4>
+                <ul>
+                    <li><strong>Max Tokens:</strong> Controls response length (higher = longer responses)</li>
+                    <li><strong>Temperature:</strong> Controls creativity (higher = more creative, lower = more focused)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Theme Variables */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f7f8;
+    --bg-tertiary: #ffffff;
+    --text-primary: #374151;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --card-bg: #ffffff;
+    --button-primary: #10b981;
+    --button-hover: #059669;
+    --button-secondary: #6b7280;
+    --button-secondary-hover: #4b5563;
+    --alert-success: #d1fae5;
+    --alert-success-text: #065f46;
+    --alert-error: #fee2e2;
+    --alert-error-text: #991b1b;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #1a1a1a;
+    --text-primary: #e5e7eb;
+    --text-secondary: #9ca3af;
+    --border-color: #404040;
+    --card-bg: #2d2d2d;
+    --button-primary: #10b981;
+    --button-hover: #059669;
+    --button-secondary: #6b7280;
+    --button-secondary-hover: #4b5563;
+    --alert-success: #064e3b;
+    --alert-success-text: #d1fae5;
+    --alert-error: #7f1d1d;
+    --alert-error-text: #fecaca;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Container */
+.settings-container {
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.settings-card, .help-card {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Header */
+.card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.title-section i {
+    font-size: 1.5rem;
+    color: var(--button-primary);
+}
+
+.title-section h2, .title-section h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.title-section h3 {
+    font-size: 1.25rem;
+}
+
+/* Form */
+.card-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--button-primary);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.form-control::placeholder {
+    color: var(--text-secondary);
+}
+
+.form-text {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.form-text a {
+    color: var(--button-primary);
+    text-decoration: none;
+}
+
+.form-text a:hover {
+    text-decoration: underline;
+}
+
+/* Buttons */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    gap: 1rem;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: var(--button-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--button-hover);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-secondary {
+    background-color: var(--button-secondary);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: var(--button-secondary-hover);
+    color: white;
+    text-decoration: none;
+}
+
+/* Alerts */
+.alert {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+}
+
+.alert-success {
+    background-color: var(--alert-success);
+    color: var(--alert-success-text);
+    border-color: var(--alert-success);
+}
+
+.alert-error {
+    background-color: var(--alert-error);
+    color: var(--alert-error-text);
+    border-color: var(--alert-error);
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    float: right;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+.btn-close:hover {
+    opacity: 1;
+}
+
+/* Help Sections */
+.help-section {
+    margin-bottom: 1.5rem;
+}
+
+.help-section:last-child {
+    margin-bottom: 0;
+}
+
+.help-section h4 {
+    margin: 0 0 0.75rem 0;
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.help-section ol, .help-section ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.help-section li {
+    margin-bottom: 0.5rem;
+}
+
+.help-section strong {
+    color: var(--text-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 1rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn {
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+// Apply theme on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+});
+</script>
+{% endblock %} 
