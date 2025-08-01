@@ -1,4 +1,5 @@
 db.sqlite3
 checkpoint-2200/
 PolyChat/__pycache__/
+poly_chat/__pycache__/
 poly_chat/migrations/
