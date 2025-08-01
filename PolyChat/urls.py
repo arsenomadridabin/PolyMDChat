@@ -17,10 +17,18 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+from django.contrib.auth import logout
+
+def logout_view(request):
+    """Custom logout view that accepts GET requests"""
+    logout(request)
+    return redirect('/accounts/login/')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('accounts/logout/', logout_view, name='logout'),
     path('', include('poly_chat.urls')),
 ]
