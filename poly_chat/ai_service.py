@@ -12,22 +12,26 @@ logger = logging.getLogger(__name__)
 # Global variables for model and tokenizer
 model = None
 tokenizer = None
+current_model_path = None
 
 def load_model(model_path=None):
     """Load the fine-tuned Mixtral model"""
-    global model, tokenizer
+    global model, tokenizer, current_model_path
     
     try:
-        logger.info("Loading model and tokenizer...")
-        
-        # Import here to avoid loading on startup
-        from transformers import AutoTokenizer, AutoModelForCausalLM
-        
         # Use provided model path or default
         if model_path is None:
             model_path = "checkpoint-2200"  # Default path
         
+        # Check if model is already loaded with the same path
+        if model is not None and tokenizer is not None and current_model_path == model_path:
+            logger.info(f"Model already loaded from: {model_path}")
+            return
+        
         logger.info(f"Loading model from: {model_path}")
+        
+        # Import here to avoid loading on startup
+        from transformers import AutoTokenizer, AutoModelForCausalLM
         
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         tokenizer.pad_token = tokenizer.eos_token
@@ -40,19 +44,31 @@ def load_model(model_path=None):
             trust_remote_code=True
         )
         
+        current_model_path = model_path
         logger.info("Model loaded successfully!")
         
     except Exception as e:
         logger.error(f"Error loading model: {e}")
         raise
 
+def is_model_loaded():
+    """Check if model is currently loaded"""
+    global model, tokenizer, current_model_path
+    return model is not None and tokenizer is not None and current_model_path is not None
+
+def get_current_model_path():
+    """Get the path of the currently loaded model"""
+    global current_model_path
+    return current_model_path
+
 def reload_model(model_path=None):
     """Reload the model with a new path"""
-    global model, tokenizer
+    global model, tokenizer, current_model_path
     
     # Clear existing model and tokenizer
     model = None
     tokenizer = None
+    current_model_path = None
     
     # Load new model
     load_model(model_path)
@@ -78,7 +94,6 @@ class AIService:
         self.model_name = config.model_name
         self.max_tokens = config.max_tokens
         self.temperature = config.temperature
-        self._current_model_path = None  # Track current model path
     
     def generate_response(self, conversation: Conversation, user_message: str) -> str:
         """
@@ -127,19 +142,23 @@ class AIService:
         """
         Call local fine-tuned Mixtral model directly using proven chat_cli.py approach
         """
-        global model, tokenizer
+        global model, tokenizer, current_model_path
         
         try:
             # Check if we need to load or reload the model
             model_path = self.model_name
             
+            logger.info(f"Current model path: {current_model_path}, Requested path: {model_path}")
+            logger.info(f"Model loaded: {model is not None}, Tokenizer loaded: {tokenizer is not None}")
+            
             # Load model if not already loaded or if model path has changed
             if (model is None or tokenizer is None or 
-                self._current_model_path != model_path):
+                current_model_path != model_path):
                 
                 logger.info(f"Loading model from: {model_path}")
                 load_model(model_path)
-                self._current_model_path = model_path
+            else:
+                logger.info("Using already loaded model")
             
             # Format messages for the model using proven approach
             prompt = format_chat_history(messages)
