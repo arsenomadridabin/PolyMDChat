@@ -27,6 +27,9 @@ def load_model():
         model_path = "checkpoint-2200"  # Path to your fine-tuned model
         
         tokenizer = AutoTokenizer.from_pretrained(model_path)
+        tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.pad_token_id = tokenizer.eos_token_id
+        
         model = AutoModelForCausalLM.from_pretrained(
             model_path,
             torch_dtype=torch.float16,
@@ -40,25 +43,17 @@ def load_model():
         logger.error(f"Error loading model: {e}")
         raise
 
-def format_messages(messages):
-    """Format messages for the model input"""
-    formatted = ""
-    
-    for message in messages:
-        role = message["role"]
-        content = message["content"]
-        
-        if role == "system":
-            formatted += f"<|system|>\n{content}\n<|end|>\n"
-        elif role == "user":
-            formatted += f"<|user|>\n{content}\n<|end|>\n"
-        elif role == "assistant":
-            formatted += f"<|assistant|>\n{content}\n<|end|>\n"
-    
-    # Add assistant prefix for response generation
-    formatted += "<|assistant|>\n"
-    
-    return formatted
+def format_chat_history(messages):
+    """Format messages for multi-turn chat using the proven chat_cli.py approach"""
+    prompt = ""
+    for i, msg in enumerate(messages):
+        if msg["role"] == "system" and i == 0:
+            prompt = f"<s>[INST] <<SYS>>\n{msg['content']}\n<</SYS>>\n\n"
+        elif msg["role"] == "user":
+            prompt += f"<s>[INST] {msg['content']} [/INST]"
+        elif msg["role"] == "assistant":
+            prompt += f" {msg['content']} </s>"
+    return prompt
 
 class AIService:
     """Service for handling AI model interactions"""
@@ -80,10 +75,10 @@ class AIService:
         # Prepare conversation context for AI
         conversation_history = []
         
-        # Add system message
+        # Add system message (using the same system prompt from chat_cli.py)
         conversation_history.append({
             "role": "system",
-            "content": "You are a helpful AI assistant powered by a fine-tuned Mixtral 7x8B model (checkpoint-2200) optimized for multi-turn conversations. Provide clear, concise, and accurate responses. Be conversational and engaging."
+            "content": "You are a helpful assistant specialized in polymers and molecular simulations."
         })
         
         # Add conversation history
@@ -105,7 +100,7 @@ class AIService:
     
     def _call_local_model(self, messages: List[Dict]) -> str:
         """
-        Call local fine-tuned Mixtral model directly
+        Call local fine-tuned Mixtral model directly using proven chat_cli.py approach
         """
         global model, tokenizer
         
@@ -114,30 +109,29 @@ class AIService:
             if model is None or tokenizer is None:
                 load_model()
             
-            # Format messages for the model
-            prompt = format_messages(messages)
+            # Format messages for the model using proven approach
+            prompt = format_chat_history(messages)
             
             # Tokenize input
-            inputs = tokenizer(prompt, return_tensors="pt")
+            inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
             
-            # Generate response
+            # Generate response using same parameters as chat_cli.py
             with torch.no_grad():
                 outputs = model.generate(
-                    inputs.input_ids,
+                    **inputs,
                     max_new_tokens=self.max_tokens,
-                    temperature=self.temperature,
                     do_sample=True,
-                    pad_token_id=tokenizer.eos_token_id
+                    temperature=self.temperature,
+                    top_p=0.9,
+                    pad_token_id=tokenizer.pad_token_id,
+                    eos_token_id=tokenizer.eos_token_id
                 )
             
-            # Decode response
-            response_tokens = outputs[0][inputs.input_ids.shape[1]:]
-            response = tokenizer.decode(response_tokens, skip_special_tokens=True)
+            # Decode response using same approach as chat_cli.py
+            output_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            reply = output_text.split("[/INST]")[-1].strip().split("</s>")[0].strip()
             
-            # Clean up response (remove any trailing special tokens)
-            response = response.strip()
-            
-            return response
+            return reply
                 
         except Exception as e:
             logger.error(f"Error generating response: {e}")
