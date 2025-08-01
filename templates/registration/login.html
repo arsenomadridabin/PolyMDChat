@@ -3,45 +3,206 @@
 {% block title %}Login - PolyChat{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">
-                        <i class="fas fa-sign-in-alt"></i> Login to PolyChat
-                    </h4>
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>
+                <i class="fas fa-sign-in-alt"></i> Login to PolyChat
+            </h2>
+        </div>
+        <div class="login-body">
+            <form method="post" class="login-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_username">Username</label>
+                    <input type="text" name="username" id="id_username" required>
                 </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="id_username" class="form-label">Username</label>
-                            <input type="text" name="username" class="form-control" id="id_username" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_password" class="form-label">Password</label>
-                            <input type="password" name="password" class="form-control" id="id_password" required>
-                        </div>
-                        {% if form.errors %}
-                            <div class="alert alert-danger">
-                                <strong>Error:</strong> Please check your username and password.
-                            </div>
-                        {% endif %}
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </button>
-                    </form>
-                    <hr>
-                    <div class="text-center">
-                        <p class="mb-0">Don't have an account?</p>
-                        <a href="{% url 'poly_chat:register' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-user-plus"></i> Create Account
-                        </a>
+                <div class="form-group">
+                    <label for="id_password">Password</label>
+                    <input type="password" name="password" id="id_password" required>
+                </div>
+                {% if form.errors %}
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Error:</strong> Please check your username and password.
                     </div>
-                </div>
+                {% endif %}
+                <button type="submit" class="login-button">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+            <div class="login-divider"></div>
+            <div class="register-section">
+                <p>Don't have an account?</p>
+                <a href="{% url 'poly_chat:register' %}" class="register-link">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 80px);
+        padding: 2rem;
+        background-color: var(--bg-primary);
+    }
+
+    .login-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        box-shadow: var(--shadow);
+        width: 100%;
+        max-width: 400px;
+        overflow: hidden;
+    }
+
+    .login-header {
+        background-color: var(--bg-secondary);
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .login-header h2 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .login-header i {
+        color: var(--accent-color);
+    }
+
+    .login-body {
+        padding: 2rem;
+    }
+
+    .login-form {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        background-color: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .login-button {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .login-button:hover {
+        background-color: var(--accent-hover);
+    }
+
+    .error-message {
+        background-color: #fee2e2;
+        border: 1px solid #fecaca;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        color: #991b1b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    [data-theme="dark"] .error-message {
+        background-color: #7f1d1d;
+        border-color: #fecaca;
+        color: #fecaca;
+    }
+
+    .login-divider {
+        height: 1px;
+        background-color: var(--border-color);
+        margin: 1.5rem 0;
+    }
+
+    .register-section {
+        text-align: center;
+    }
+
+    .register-section p {
+        margin: 0 0 1rem 0;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .register-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        text-decoration: none;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+    }
+
+    .register-link:hover {
+        background-color: var(--bg-tertiary);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    @media (max-width: 480px) {
+        .login-container {
+            padding: 1rem;
+        }
+        
+        .login-body {
+            padding: 1.5rem;
+        }
+    }
+</style>
 {% endblock %} 
